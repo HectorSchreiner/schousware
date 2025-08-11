@@ -5,5 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
+crossterm = "0.29.0"
 ratatui = "0.29.0"
 tokio = "1.47.1"
+uuid = "1.18.0"
