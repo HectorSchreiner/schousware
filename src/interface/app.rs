@@ -52,7 +52,10 @@ impl App {
             KeyCode::Esc => self.exit = ExitState::Exit,
             KeyCode::Char('1') => self.menu = MenuState::MainMenu,
             KeyCode::Char('2') => self.menu = MenuState::UserMenu,
-            _ => return
+            KeyCode::Char('3') => self.menu = MenuState::InfectedMenu,
+            KeyCode::Char('4') => self.menu = MenuState::StatsMenu,
+
+            _ => {}
         }
     }
 
@@ -64,7 +67,7 @@ impl App {
     }
 
     fn menu_selection(&self) -> Line<'static> {
-        Line::from(" <1> Main <2> Users ")
+        Line::from(" <1>Main <2>Users <3>Infected <4>Stats")
     } 
 
     fn menu_instructions(&self) -> Line<'static> {
@@ -88,7 +91,29 @@ impl App {
     }
 
     fn render_user_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        let title = Line::from(" User Menu ");
+        let title = Line::from(" Users ");
+
+        let main = Block::bordered()
+        .title(title.centered())
+        .title_bottom(self.menu_instructions().centered())
+        .title_top(self.menu_selection().left_aligned())
+        .border_set(border::ROUNDED)
+        .render(area, buffer);
+    }
+
+    fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+        let title = Line::from(" Infected Machines ");
+
+        let main = Block::bordered()
+        .title(title.centered())
+        .title_bottom(self.menu_instructions().centered())
+        .title_top(self.menu_selection().left_aligned())
+        .border_set(border::ROUNDED)
+        .render(area, buffer);
+    }
+
+    fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+        let title = Line::from(" Stats ");
 
         let main = Block::bordered()
         .title(title.centered())
@@ -111,7 +136,10 @@ pub enum MenuState {
     #[default]
     MainMenu,
     UserMenu,
+    InfectedMenu,
+    StatsMenu,
 }
+
 impl Widget for &App {
     fn render(self, area: ratatui::prelude::Rect, buffer: &mut Buffer)
         where
@@ -120,6 +148,17 @@ impl Widget for &App {
         match self.menu {
             MenuState::MainMenu => self.render_main_menu(area, buffer),
             MenuState::UserMenu => self.render_user_menu(area, buffer),
+            MenuState::InfectedMenu => self.render_infected_menu(area, buffer),
+            MenuState::StatsMenu => self.render_stats_menu(area, buffer),
         }
+    }
+}
+
+pub fn menu_state_to_number(state: MenuState) -> u8 {
+    match state {
+        MenuState::MainMenu => 1,
+        MenuState::UserMenu => 2,
+        MenuState::InfectedMenu => 3,
+        MenuState::StatsMenu => 4,
     }
 }

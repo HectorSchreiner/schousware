@@ -8,7 +8,13 @@ use ::thiserror::Error;
 pub struct Infected {
     id: InfectedId,
     hostname: Option<HostName>,
-    ip: Option<InfectedIpAddr>
+    ip: InfectedIpAddr
+}
+
+impl Infected {
+    fn new(&self, hostname: Option<HostName>, ip: InfectedIpAddr) -> Self {
+        Self { id: InfectedId::new(), hostname, ip }
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -18,7 +24,7 @@ pub struct HostName(String);
 pub struct InfectedId(Uuid);
 
 impl InfectedId {
-    pub fn new(&self) -> Self {
+    pub fn new() -> Self {
         Self(Uuid::new_v4())
     }
 
