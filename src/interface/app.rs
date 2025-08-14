@@ -1,4 +1,4 @@
-use std::{default, io};
+use std::{default, io, vec};
 
 
 use anyhow::Error;
@@ -20,7 +20,6 @@ pub struct App {
 }
 
 impl App {
-
     pub fn init() -> Self {
         Self { menu: MenuState::default(), exit: ExitState::default() }
     }
@@ -54,7 +53,7 @@ impl App {
             KeyCode::Char('1') => self.menu = MenuState::MainMenu,
             KeyCode::Char('2') => self.menu = MenuState::UserMenu,
             _ => return
-        }2
+        }
     }
 
     fn is_running(&self) -> bool {
@@ -64,51 +63,37 @@ impl App {
         }
     }
 
-    fn render_main_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        let layout = Layout::default()
-        .constraints(vec![
-            Constraint::Percentage(50),
-            Constraint::Percentage(50),
+    fn menu_selection(&self) -> Line<'static> {
+        Line::from(" <1> Main <2> Users ")
+    } 
 
-        ]).split(area);
-
-        let title = Line::from(" Schousware C3 Server ");
-        let title2 = Line::from(" Users ");
-
-        let instructions = Line::from(vec![
+    fn menu_instructions(&self) -> Line<'static> {
+        Line::from(vec![
             " Exit ".into(),
-            "<ESC> ".into()
-            ]);
+            "<ESC>".into(),
+            " Change Menu ".into(),
+            "<NUM> ".into()
+            ])
+    }
 
-        let instructions2 = Line::from(vec![
-            " Up ".into(),
-            " <Up Arrow> ".into()
-            ]);
+    fn render_main_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+        let title = Line::from(" Schousware C3 Server ");  
 
         let main = Block::bordered()
         .title(title.centered())
-        .title_bottom(instructions.centered())
+        .title_bottom(self.menu_instructions().centered())
+        .title_top(self.menu_selection().left_aligned())
         .border_set(border::ROUNDED)
-        .render(layout[0], buffer);
-
-         let users = Block::bordered()
-        .title(title2.centered())
-        .title_bottom(instructions2.centered())
-        .border_set(border::ROUNDED)
-        .render(layout[1], buffer);   
+        .render(area, buffer);
     }
 
     fn render_user_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         let title = Line::from(" User Menu ");
 
-        let instructions = Line::from(vec![
-            " Exit ".into(),
-            "<ESC> ".into()
-            ]);
-
         let main = Block::bordered()
         .title(title.centered())
-        .title_bottom(instructions.centered())
+        .title_bottom(self.menu_instructions().centered())
+        .title_top(self.menu_selection().left_aligned())
         .border_set(border::ROUNDED)
         .render(area, buffer);
     }

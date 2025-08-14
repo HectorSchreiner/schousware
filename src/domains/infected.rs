@@ -1,0 +1,55 @@
+use ip::IpAddr;
+use serde::{Deserialize, Serialize};
+use uuid::serde::braced::serialize;
+use ::uuid::Uuid;
+use ::thiserror::Error;
+
+#[derive(Deserialize, Serialize)]
+pub struct Infected {
+    id: InfectedId,
+    hostname: Option<HostName>,
+    ip: Option<InfectedIpAddr>
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct HostName(String);
+
+#[derive(Deserialize, Serialize)]
+pub struct InfectedId(Uuid);
+
+impl InfectedId {
+    pub fn new(&self) -> Self {
+        Self(Uuid::new_v4())
+    }
+
+    pub fn get(&self) -> Uuid {
+        self.0
+    }
+}
+#[derive(Debug, Deserialize)]
+#[serde(try_from = "String")]
+pub struct InfectedIpAddr(IpAddr);
+
+impl From<InfectedIpAddr> for IpAddr {
+    fn from(infected_ip: InfectedIpAddr) -> Self {
+        infected_ip.0
+    }
+}
+
+impl TryFrom<String> for InfectedIpAddr {
+    type Error = <IpAddr as std::str::FromStr>::Err;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        s.parse::<IpAddr>().map(InfectedIpAddr)
+    }
+}
+
+impl Serialize for InfectedIpAddr {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        let str = &self.0.to_string();
+        serializer.serialize_str(str)
+    }
+}
+
