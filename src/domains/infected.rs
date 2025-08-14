@@ -7,18 +7,31 @@ use ::thiserror::Error;
 #[derive(Deserialize, Serialize)]
 pub struct Infected {
     id: InfectedId,
-    hostname: Option<HostName>,
+    hostname: HostName,
     ip: InfectedIpAddr
 }
 
 impl Infected {
-    fn new(&self, hostname: Option<HostName>, ip: InfectedIpAddr) -> Self {
+    pub fn new(hostname: HostName, ip: InfectedIpAddr) -> Self {
         Self { id: InfectedId::new(), hostname, ip }
     }
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct HostName(String);
+
+impl HostName {
+    pub fn new(hostname: String) -> Self {
+        Self(hostname)
+    }
+}
+
+impl From<String> for HostName {
+    fn from(value: String) -> Self {
+        HostName(value)
+    }
+}
+
 
 #[derive(Deserialize, Serialize)]
 pub struct InfectedId(Uuid);
@@ -35,6 +48,12 @@ impl InfectedId {
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct InfectedIpAddr(IpAddr);
+
+impl From<IpAddr> for InfectedIpAddr {
+    fn from(value: IpAddr) -> Self {
+        Self(value)
+    }
+}
 
 impl From<InfectedIpAddr> for IpAddr {
     fn from(infected_ip: InfectedIpAddr) -> Self {
