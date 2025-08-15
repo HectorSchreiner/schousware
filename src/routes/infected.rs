@@ -1,4 +1,4 @@
-use std::net::Ipv4Addr;
+use std::{net::Ipv4Addr, str::FromStr};
 
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
@@ -12,8 +12,9 @@ pub fn get_infected_all() -> Vec<Infected> {
 
 pub fn create_infected() -> Result<(), Error> {
     let hostname = HostName::new("Hostname".into());
-    let ip: InfectedIpAddr = InfectedIpAddr::from(Ipv4Addr::new(127, 0, 0, 1));
-    //Infected::new( "hostname".to_string().into(),);
+    let ip: InfectedIpAddr = InfectedIpAddr::try_from("127.0.0.1".to_string())?;
+
+    let new_infected = Infected::new(hostname, ip);
     Ok(())
 }
 

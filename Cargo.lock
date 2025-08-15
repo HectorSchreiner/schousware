@@ -320,12 +320,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ip"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7349baf09910ffb475d8ea8a16f1bbe5ec2be295373feef33fb4fea658b8a0ef"
-
-[[package]]
 name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -580,7 +574,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
- "ip",
  "ratatui",
  "serde",
  "thiserror",
