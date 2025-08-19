@@ -13,7 +13,7 @@ use serde;
 use crossterm::terminal;
 use ratatui::{backend::TestBackend, buffer::Buffer, layout::Rect, prelude::{Backend, CrosstermBackend}, Terminal};
 
-use crate::{interface::app::App, routes::infected::InfectedDatabase};
+use crate::{interface::app::App};
 
 fn main() -> io::Result<()>{
 

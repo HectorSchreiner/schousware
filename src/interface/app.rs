@@ -11,7 +11,7 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use crate::{domains::{self, infected::{self, HostName, Infected, InfectedIpAddr}}, repos::database::{self, InfectedRepo}, routes::infected::InfectedDatabase};
+use crate::{domains::{self, infected::{self, HostName, Infected, InfectedIpAddr}}, repos::database::{self, InfectedDatabase, InfectedRepo}};
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -103,9 +103,9 @@ impl App {
 
     fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         self.default_menu_instruction(" Infected ", area, buffer);
-        let db = InfectedDatabase::new();
+        let db = InfectedDatabase::new().unwrap();
         let infected = Infected::new(HostName::new("hostname"), InfectedIpAddr::from_str("127.0.0.1").unwrap());
-        db.add_infected(&infected).unwrap();
+        let _ = db.add_infected(&infected);
     }
 
     fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
