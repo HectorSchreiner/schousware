@@ -7,15 +7,11 @@ use ::thiserror::Error;
 
 use crate::repos::database::{InfectedDatabaseError, InfectedRepo};
 
-pub fn create_infected(infected: &Infected, database: impl InfectedRepo) -> Result<(), InfectedDatabaseError> {
-    database.add_infected(infected)
-}
-
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Infected {
-    id: InfectedId,
-    hostname: HostName,
-    ip: InfectedIpAddr
+    pub id: InfectedId,
+    pub hostname: HostName,
+    pub ip: InfectedIpAddr
 }
 
 impl Infected {
@@ -24,7 +20,7 @@ impl Infected {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct HostName(String);
 
 impl HostName {
@@ -40,7 +36,7 @@ impl From<String> for HostName {
 }
 
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct InfectedId(Uuid);
 
 impl InfectedId {
@@ -52,7 +48,7 @@ impl InfectedId {
         self.0
     }
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(try_from = "String")]
 pub struct InfectedIpAddr(Ipv4Addr);
 
