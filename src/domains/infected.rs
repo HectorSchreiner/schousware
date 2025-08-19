@@ -1,10 +1,17 @@
 use std::{net::{AddrParseError, Ipv4Addr}, str::FromStr};
+use anyhow::Ok;
 use serde::{Deserialize, Serialize};
 use uuid::serde::braced::serialize;
 use ::uuid::Uuid;
 use ::thiserror::Error;
 
-#[derive(Deserialize, Serialize)]
+use crate::repos::database::{InfectedDatabaseError, InfectedRepo};
+
+pub fn create_infected(infected: &Infected, database: impl InfectedRepo) -> Result<(), InfectedDatabaseError> {
+    database.add_infected(infected)
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Infected {
     id: InfectedId,
     hostname: HostName,
@@ -17,7 +24,7 @@ impl Infected {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct HostName(String);
 
 impl HostName {
@@ -33,7 +40,7 @@ impl From<String> for HostName {
 }
 
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct InfectedId(Uuid);
 
 impl InfectedId {
@@ -56,7 +63,7 @@ impl From<InfectedIpAddr> for Ipv4Addr {
 }
 
 impl TryFrom<String> for InfectedIpAddr {
-    type Error = AddrParseError;
+    type Error = anyhow::Error;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let ipv4addr = InfectedIpAddr(Ipv4Addr::from_str(&value)?);

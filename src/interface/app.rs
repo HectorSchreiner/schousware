@@ -1,6 +1,5 @@
 use std::{default, io, vec};
 
-
 use anyhow::Error;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
@@ -13,15 +12,18 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
+use crate::domains::infected::Infected;
+
 #[derive(Debug, Default)]
 pub struct App {
     menu: MenuState,
-    exit: ExitState
+    exit: ExitState,
+    infected_machines: Vec<Infected>
 }
 
 impl App {
     pub fn init() -> Self {
-        Self { menu: MenuState::default(), exit: ExitState::default() }
+        Self { menu: MenuState::default(), exit: ExitState::default(), infected_machines: Vec::new() }
     }
 
     /// runs the application's main loop until the user quits
@@ -54,7 +56,6 @@ impl App {
             KeyCode::Char('2') => self.menu = MenuState::UserMenu,
             KeyCode::Char('3') => self.menu = MenuState::InfectedMenu,
             KeyCode::Char('4') => self.menu = MenuState::StatsMenu,
-
             _ => {}
         }
     }
@@ -79,48 +80,33 @@ impl App {
             ])
     }
 
-    fn render_main_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        let title = Line::from(" Schousware C3 Server ");  
+    fn default_menu_instruction(&self, title: &'static str, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+        let title = Line::from(title);
 
-        let main = Block::bordered()
+        return Block::bordered()
         .title(title.centered())
-        .title_bottom(self.menu_instructions().centered())
-        .title_top(self.menu_selection().left_aligned())
+        .title_top(self.menu_instructions().left_aligned())
+        .title_bottom(self.menu_selection().left_aligned())
         .border_set(border::ROUNDED)
-        .render(area, buffer);
+        .render(area, buffer)
+    }
+
+    fn render_main_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+        self.default_menu_instruction(" Main ", area, buffer)        
     }
 
     fn render_user_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        let title = Line::from(" Users ");
+        self.default_menu_instruction(" Users ", area, buffer);
 
-        let main = Block::bordered()
-        .title(title.centered())
-        .title_bottom(self.menu_instructions().centered())
-        .title_top(self.menu_selection().left_aligned())
-        .border_set(border::ROUNDED)
-        .render(area, buffer);
     }
 
     fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        let title = Line::from(" Infected Machines ");
+        self.default_menu_instruction(" Infected ", area, buffer);
 
-        let main = Block::bordered()
-        .title(title.centered())
-        .title_bottom(self.menu_instructions().centered())
-        .title_top(self.menu_selection().left_aligned())
-        .border_set(border::ROUNDED)
-        .render(area, buffer);
     }
 
     fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        let title = Line::from(" Stats ");
-
-        let main = Block::bordered()
-        .title(title.centered())
-        .title_bottom(self.menu_instructions().centered())
-        .title_top(self.menu_selection().left_aligned())
-        .border_set(border::ROUNDED)
-        .render(area, buffer);
+        self.default_menu_instruction(" Stats ", area, buffer);
     }
 }
 
