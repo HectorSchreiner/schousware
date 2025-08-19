@@ -17,6 +17,18 @@ impl Infected {
     pub fn new(hostname: HostName, ip: InfectedIpAddr) -> Self {
         Self { id: InfectedId::new(), hostname, ip }
     }
+
+    pub fn hostname(&self) -> String {
+        self.hostname.0.clone()
+    }
+
+    pub fn id(&self) -> String {
+        self.id.0.to_string()
+    }
+
+    pub fn ip(&self) -> String {
+        self.ip.0.to_string()
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

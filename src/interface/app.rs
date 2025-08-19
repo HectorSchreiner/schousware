@@ -1,4 +1,4 @@
-use std::{default, io, net::{IpAddr, Ipv4Addr}, str::FromStr, vec};
+use std::{default, io, net::{IpAddr, Ipv4Addr}, process::id, str::FromStr, vec};
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
@@ -7,7 +7,7 @@ use ratatui::{
     style::Stylize,
     symbols::border,
     text::{Line, Text},
-    widgets::{Block, Paragraph, Widget},
+    widgets::{Block, Paragraph, Widget, Wrap},
     DefaultTerminal, Frame,
 };
 
@@ -15,16 +15,35 @@ use crate::{domains::{self, infected::{self, HostName, Infected, InfectedIpAddr}
 
 #[derive(Debug, Default)]
 pub struct App {
-    menu: MenuState,
+    menu: AppMenuState,
     exit: ExitState,
-    infected_machines: Vec<Infected>,
+}
+
+#[derive(Debug, Default)]
+pub enum ExitState {
+    #[default]
+    Running,
+    Exit,
+}
+
+#[derive(Debug, Default)]
+pub enum AppMenuState {
+    #[default]
+    MainMenu,
+    UserMenu,
+    InfectedMenu(InfectedMenuState),
+    StatsMenu,
+}
+#[derive(Debug, Default)]
+pub enum InfectedMenuState {
+    #[default]
+    ShowInfected,
+    AddMachine,
 }
 
 impl App {
     pub fn init() -> Self {
-        let infected_machines: Vec<Infected> = Vec::new();
-
-        Self { menu: MenuState::default(), exit: ExitState::default(), infected_machines }
+        Self { menu: AppMenuState::default(), exit: ExitState::default() }
     }
 
     /// runs the application's main loop until the user quits
@@ -53,14 +72,28 @@ impl App {
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Esc => self.exit = ExitState::Exit,
-            KeyCode::Char('1') => self.menu = MenuState::MainMenu,
-            KeyCode::Char('2') => self.menu = MenuState::UserMenu,
-            KeyCode::Char('3') => self.menu = MenuState::InfectedMenu,
-            KeyCode::Char('4') => self.menu = MenuState::StatsMenu,
+            KeyCode::Char('1') => self.menu = AppMenuState::MainMenu,
+            KeyCode::Char('2') => self.menu = AppMenuState::UserMenu,
+            KeyCode::Char('3') => self.menu = AppMenuState::InfectedMenu(InfectedMenuState::default()),
+            KeyCode::Char('4') => self.menu = AppMenuState::StatsMenu,
             _ => {}
         }
     }
 
+    fn handle_app_menu_key_event(&mut self, key_event: KeyEvent) {
+        match self.menu {
+            AppMenuState::InfectedMenu(_) => self.handle_infected_key_event(key_event),
+            _ => {}
+        }
+    }
+
+    fn handle_infected_key_event(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Char('a')  => self.menu = AppMenuState::InfectedMenu(InfectedMenuState::AddMachine),
+            KeyCode::Char('s')  => self.menu = AppMenuState::InfectedMenu(InfectedMenuState::ShowInfected),
+            _ => {}
+        }
+    }
     fn is_running(&self) -> bool {
         match self.exit {
             ExitState::Exit => false,
@@ -102,10 +135,28 @@ impl App {
     }
 
     fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        self.default_menu_instruction(" Infected ", area, buffer);
         let db = InfectedDatabase::new().unwrap();
-        let infected = Infected::new(HostName::new("hostname"), InfectedIpAddr::from_str("127.0.0.1").unwrap());
-        let _ = db.add_infected(&infected);
+        self.default_menu_instruction(" Infected ", area, buffer);
+
+        let mut machine_list_text = Text::default();
+
+        let infected_list_area = Rect {
+            x: area.x + 1,
+            y: area.y + 1,
+            width: area.width - 2,
+            height: area.height - 2,
+        };
+    
+        if let Ok(infected_machines) = db.get_all_infected() {
+            for (i, infected) in infected_machines.iter().enumerate() {
+                machine_list_text.push_line(format!("[{:?}] Hostname: {} Ip: {} Uuid: {}", i, infected.hostname(), infected.ip(), infected.id()));
+            }
+        } else {
+            machine_list_text.push_line("No Machines Found");
+        }
+
+        let paragraph = Paragraph::new(machine_list_text).wrap(Wrap { trim: true });
+        paragraph.render(infected_list_area, buffer);
     }
 
     fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
@@ -113,21 +164,7 @@ impl App {
     }
 }
 
-#[derive(Debug, Default)]
-pub enum ExitState {
-    #[default]
-    Running,
-    Exit,
-}
 
-#[derive(Debug, Default)]
-pub enum MenuState {
-    #[default]
-    MainMenu,
-    UserMenu,
-    InfectedMenu,
-    StatsMenu,
-}
 
 impl Widget for &App {
     fn render(self, area: ratatui::prelude::Rect, buffer: &mut Buffer)
@@ -135,19 +172,19 @@ impl Widget for &App {
             Self: Sized 
     {
         match self.menu {
-            MenuState::MainMenu => self.render_main_menu(area, buffer),
-            MenuState::UserMenu => self.render_user_menu(area, buffer),
-            MenuState::InfectedMenu => self.render_infected_menu(area, buffer),
-            MenuState::StatsMenu => self.render_stats_menu(area, buffer),
+            AppMenuState::MainMenu => self.render_main_menu(area, buffer),
+            AppMenuState::UserMenu => self.render_user_menu(area, buffer),
+            AppMenuState::InfectedMenu(_) => self.render_infected_menu(area, buffer),
+            AppMenuState::StatsMenu => self.render_stats_menu(area, buffer),
         }
     }
 }
 
-pub fn menu_state_to_number(state: MenuState) -> u8 {
+pub fn menu_state_to_number(state: AppMenuState) -> u8 {
     match state {
-        MenuState::MainMenu => 1,
-        MenuState::UserMenu => 2,
-        MenuState::InfectedMenu => 3,
-        MenuState::StatsMenu => 4,
+        AppMenuState::MainMenu => 1,
+        AppMenuState::UserMenu => 2,
+        AppMenuState::InfectedMenu(_) => 3,
+        AppMenuState::StatsMenu => 4,
     }
 }
