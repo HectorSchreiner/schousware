@@ -1,6 +1,5 @@
 use std::{default, io, net::{IpAddr, Ipv4Addr}, str::FromStr, vec};
 
-use anyhow::Error;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     buffer::Buffer,
@@ -105,8 +104,8 @@ impl App {
     fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         self.default_menu_instruction(" Infected ", area, buffer);
         let db = InfectedDatabase::new();
-        let infected = Infected::new(HostName::new("hostname".to_string()), InfectedIpAddr::try_from("127.0.0.1".to_string()).unwrap());
-        let _ = db.add_infected(&infected);
+        let infected = Infected::new(HostName::new("hostname"), InfectedIpAddr::from_str("127.0.0.1").unwrap());
+        db.add_infected(&infected).unwrap();
     }
 
     fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {

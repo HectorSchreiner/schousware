@@ -1,6 +1,5 @@
 use std::{any, fs, io::{BufReader, Read, Write}, net::Ipv4Addr, path::PathBuf, str::FromStr};
 
-use anyhow::{Error, Ok, Result};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use dirs::config_dir;
@@ -47,11 +46,10 @@ impl InfectedDatabase {
 
     fn save_infected(&self, infected_vec: &Vec<Infected>) -> Result<(), InfectedDatabaseError> {
        let data = serde_json::to_string(&infected_vec)
-            .map_err(|e| InfectedDatabaseError::Other(e.into()))?;
+            .map_err(|e| InfectedDatabaseError::Unknown)?;
 
         fs::write(&self.config_path, data)
-            .map_err(|e| InfectedDatabaseError::Other(e.into()))
-        
+            .map_err(|e| InfectedDatabaseError::Unknown)
     }
 }
 
@@ -59,7 +57,7 @@ impl InfectedRepo for InfectedDatabase {
     fn add_infected(&self, infected: &Infected) -> Result<(), InfectedDatabaseError> {
         let infected_vec = self.get_all_infected();
 
-        if let anyhow::Result::Ok(mut vec) = infected_vec {
+        if let Ok(mut vec) = infected_vec {
             vec.push(infected.clone());
             return self.save_infected(&vec);
         } else {
@@ -68,27 +66,31 @@ impl InfectedRepo for InfectedDatabase {
     }
 
     fn get_all_infected(&self) -> Result<Vec<Infected>, InfectedDatabaseError> {
-        let file = fs::File::open(self.config_path.clone());
-        let mut buf_reader = BufReader::new(file.unwrap());
+        let file = fs::File::open(&self.config_path)?;
+        let mut buf_reader = BufReader::new(file);
         let mut contents = String::new();
-        let _ = buf_reader.read_to_string(&mut contents).map_err(|_| InfectedDatabaseError::FileNotFound);
+        buf_reader.read_to_string(&mut contents)?;
+        
+        if contents.is_empty() {
+            return Ok(Vec::new());
+        }
 
-        let infected_vec: Result<Vec<Infected>, InfectedDatabaseError> = serde_json::from_str(&contents).map_err(|e| InfectedDatabaseError::FileNotFound);
-        infected_vec
+        let infected_vec = serde_json::from_str(&contents)?;
+        Ok(infected_vec)
     }
 
     fn get_infected(&self, uuid: Uuid) -> Result<Infected, InfectedDatabaseError> {
         let infected_vec = self.get_all_infected();
 
         match infected_vec {
-            anyhow::Result::Ok(vec) => {
+            Ok(vec) => {
                 match vec.iter().find(|i| i.id.get() == uuid).cloned() {
-                    Some(infected) => anyhow::Result::Ok(infected),
+                    Some(infected) => Ok(infected),
                     None => Err(InfectedDatabaseError::InfectedNotFound)
                 }
             },
-            anyhow::Result::Err(err) => {
-                Err(InfectedDatabaseError::Other(err.into()))
+            Err(err) => {
+                Err(InfectedDatabaseError::Unknown)
             }
         }
     }
@@ -98,14 +100,14 @@ impl InfectedRepo for InfectedDatabase {
         let mut new_infected_vec: Vec<Infected> = Vec::new();
 
         match infected_vec {
-            anyhow::Result::Ok(infected_vec) => {
+            Ok(infected_vec) => {
                 for item in infected_vec.iter() {
                     if item.id.get() != uuid {
                         new_infected_vec.push(item.clone());
                     }
                 }
             },
-            anyhow::Result::Err(err) => return Err(InfectedDatabaseError::Other(err.into()))
+            Err(err) => return Err(InfectedDatabaseError::Unknown)
         };
 
         self.save_infected(&new_infected_vec).map_err(|e| InfectedDatabaseError::FileNotFound)

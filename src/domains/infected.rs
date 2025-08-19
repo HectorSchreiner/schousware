@@ -1,6 +1,5 @@
-use std::{net::{AddrParseError, Ipv4Addr}, str::FromStr};
-use anyhow::Ok;
-use serde::{Deserialize, Serialize};
+use std::{net::{AddrParseError, Ipv4Addr}, ops::Add, str::FromStr};
+use serde::{de::value::Error, Deserialize, Serialize};
 use uuid::serde::braced::serialize;
 use ::uuid::Uuid;
 use ::thiserror::Error;
@@ -24,8 +23,8 @@ impl Infected {
 pub struct HostName(String);
 
 impl HostName {
-    pub fn new(hostname: String) -> Self {
-        Self(hostname)
+    pub fn new(hostname: &str) -> Self {
+        Self(hostname.to_string())
     }
 }
 
@@ -48,9 +47,17 @@ impl InfectedId {
         self.0
     }
 }
+
 #[derive(Debug, Deserialize, Clone)]
 #[serde(try_from = "String")]
 pub struct InfectedIpAddr(Ipv4Addr);
+
+impl InfectedIpAddr {
+    pub fn from_str(s: &str) -> Result<Self, AddrParseError> {
+        let address = InfectedIpAddr::try_from(s.to_string());
+        address
+    }
+}
 
 impl From<InfectedIpAddr> for Ipv4Addr {
     fn from(infected_ip: InfectedIpAddr) -> Self {
@@ -59,8 +66,7 @@ impl From<InfectedIpAddr> for Ipv4Addr {
 }
 
 impl TryFrom<String> for InfectedIpAddr {
-    type Error = anyhow::Error;
-
+    type Error = AddrParseError;
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let ipv4addr = InfectedIpAddr(Ipv4Addr::from_str(&value)?);
         Ok(ipv4addr)

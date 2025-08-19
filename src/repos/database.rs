@@ -1,3 +1,5 @@
+use std::error;
+
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -9,8 +11,24 @@ pub enum InfectedDatabaseError {
     FileNotFound,
     #[error("Could not find the infected")]
     InfectedNotFound,
+    #[error("unknown data store error")]
+    Unknown,
     #[error(transparent)]
-    Other(#[from] anyhow::Error),
+    Other(std::io::Error),
+    #[error(transparent)]
+    JsonError(serde_json::Error)
+}
+
+impl From<std::io::Error> for InfectedDatabaseError {
+    fn from(value: std::io::Error) -> Self {
+        Self::Other(value)
+    }
+}
+
+impl From<serde_json::Error> for InfectedDatabaseError {
+    fn from(value: serde_json::Error) -> Self {
+        Self::JsonError(value)
+    }
 }
 
 pub trait InfectedRepo {
