@@ -11,13 +11,8 @@ pub fn get_infected_all() -> Vec<Infected> {
     todo!()
 }
 
-pub fn create_infected(app: &mut App) -> Result<(), Error> {
-    let hostname = HostName::new("Hostname".into());
-    let ip: InfectedIpAddr = InfectedIpAddr::try_from("127.0.0.1".to_string())?;
-
-    let new_infected = Infected::new(hostname, ip);
-
-    Ok(())
+pub fn create_infected(infected: &Infected, database: impl InfectedRepo) -> Result<(), InfectedDatabaseError> {
+    database.add_infected(infected)
 }
 
 pub fn get_infected(id: InfectedId) -> Infected {
