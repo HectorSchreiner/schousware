@@ -1,4 +1,4 @@
-use std::{default, io, vec};
+use std::{default, io, net::{IpAddr, Ipv4Addr}, str::FromStr, vec};
 
 use anyhow::Error;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
@@ -12,18 +12,20 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use crate::domains::infected::Infected;
+use crate::{domains::{self, infected::{self, HostName, Infected, InfectedIpAddr}}, repos::database::{self, InfectedRepo}, routes::infected::InfectedDatabase};
 
 #[derive(Debug, Default)]
 pub struct App {
     menu: MenuState,
     exit: ExitState,
-    infected_machines: Vec<Infected>
+    infected_machines: Vec<Infected>,
 }
 
 impl App {
     pub fn init() -> Self {
-        Self { menu: MenuState::default(), exit: ExitState::default(), infected_machines: Vec::new() }
+        let infected_machines: Vec<Infected> = Vec::new();
+
+        Self { menu: MenuState::default(), exit: ExitState::default(), infected_machines }
     }
 
     /// runs the application's main loop until the user quits
@@ -102,7 +104,9 @@ impl App {
 
     fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         self.default_menu_instruction(" Infected ", area, buffer);
-
+        let db = InfectedDatabase::new();
+        let infected = Infected::new(HostName::new("hostname".to_string()), InfectedIpAddr::try_from("127.0.0.1".to_string()).unwrap());
+        let _ = db.add_infected(&infected);
     }
 
     fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
