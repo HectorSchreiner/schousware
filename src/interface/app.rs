@@ -11,7 +11,7 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use crate::{domains::{self, infected::{self, HostName, Infected, InfectedIpAddr}}, repos::database::{self, InfectedDatabase, InfectedRepo}};
+use crate::{domains::{self, infected::{self, HostName, Infected, InfectedId, InfectedIpAddr}}, repos::database::{self, InfectedDatabase, InfectedRepo}};
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -70,19 +70,16 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
+        match self.menu {
+            AppMenuState::InfectedMenu(_) => self.handle_infected_key_event(key_event),
+            _ => {}
+        }
         match key_event.code {
             KeyCode::Esc => self.exit = ExitState::Exit,
             KeyCode::Char('1') => self.menu = AppMenuState::MainMenu,
             KeyCode::Char('2') => self.menu = AppMenuState::UserMenu,
             KeyCode::Char('3') => self.menu = AppMenuState::InfectedMenu(InfectedMenuState::default()),
             KeyCode::Char('4') => self.menu = AppMenuState::StatsMenu,
-            _ => {}
-        }
-    }
-
-    fn handle_app_menu_key_event(&mut self, key_event: KeyEvent) {
-        match self.menu {
-            AppMenuState::InfectedMenu(_) => self.handle_infected_key_event(key_event),
             _ => {}
         }
     }
@@ -135,28 +132,65 @@ impl App {
     }
 
     fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+        let title = Line::from(" Infected ");
+        let infected_commands = Line::from(vec![
+            " S ".into(),
+            "<Show> ".into(),
+            " A ".into(),
+            "<Add> ".into(),
+            ]);
+
+        Block::bordered()
+        .title(title.centered())
+        .title_top(self.menu_instructions().left_aligned())
+        .title_bottom(self.menu_selection().left_aligned())
+        .title_bottom(infected_commands.right_aligned())
+        .border_set(border::ROUNDED)
+        .render(area, buffer);
+
         let db = InfectedDatabase::new().unwrap();
-        self.default_menu_instruction(" Infected ", area, buffer);
 
-        let mut machine_list_text = Text::default();
-
-        let infected_list_area = Rect {
+        let inner_area = Rect {
             x: area.x + 1,
             y: area.y + 1,
             width: area.width - 2,
             height: area.height - 2,
         };
-    
-        if let Ok(infected_machines) = db.get_all_infected() {
-            for (i, infected) in infected_machines.iter().enumerate() {
-                machine_list_text.push_line(format!("[{:?}] Hostname: {} Ip: {} Uuid: {}", i, infected.hostname(), infected.ip(), infected.id()));
-            }
-        } else {
-            machine_list_text.push_line("No Machines Found");
+
+        match self.menu {
+            AppMenuState::InfectedMenu(InfectedMenuState::AddMachine) => {
+                let mut info = Text::default();
+                let infected = Infected { id: InfectedId::new(), hostname: HostName::new("hostname"), ip: InfectedIpAddr::from_str("127.0.0.1").unwrap() };
+                match db.add_infected(&infected) {
+                    Ok(_) => {
+                        info.push_line(format!("Sucessfully added {:?} to database", &infected));
+                    },
+                    Err(err) => {
+                        info.push_line(format!("Could not add {:?} to database. Error {:?}", &infected, err));
+                    }
+                }
+
+                let paragraph = Paragraph::new(info).wrap(Wrap { trim: true });
+                paragraph.render(inner_area, buffer);
+            },
+            AppMenuState::InfectedMenu(InfectedMenuState::ShowInfected) => {
+                let mut machine_list_text = Text::default();
+            
+                if let Ok(infected_machines) = db.get_all_infected() {
+                    for (i, infected) in infected_machines.iter().enumerate() {
+                        machine_list_text.push_line(format!("[{:?}] Hostname: {} Ip: {} Uuid: {}", i, infected.hostname(), infected.ip(), infected.id()));
+                    }
+                } else {
+                    machine_list_text.push_line("No Machines Found");
+                }
+            
+                let paragraph = Paragraph::new(machine_list_text).wrap(Wrap { trim: true });
+                paragraph.render(inner_area, buffer);
+            },
+            _ => {}
         }
 
-        let paragraph = Paragraph::new(machine_list_text).wrap(Wrap { trim: true });
-        paragraph.render(infected_list_area, buffer);
+
     }
 
     fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
