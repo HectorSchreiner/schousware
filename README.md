@@ -1,11 +1,23 @@
 # Shousware C2 Server
 
 # Roadmap
-- [ ] Init
-- [ ] Simple TUI
-- [ ] Local Server
-- [ ] Store Machines
-- [ ] Sender/Reciever
+- [x] Init
+- [x] Simple TUI
+- [x] Local Text Config
+- [ ] Simple fileserver
+- [ ] Create Simple payload
+- [ ] Recieve Status from machines
+- [ ] Send commands
+- [ ] Replace Text Config with local sql server
+
+# Installation
+You can clone the project and run the `Debug Build` it with 
+```
+cargo run
+```
+
+# Screenshots
+
 
 # Tools
 
