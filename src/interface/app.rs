@@ -11,13 +11,14 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use crate::domains::infected::*;
+use crate::domains::{file_server::FileServer, infected::*};
 use crate::repos::database::*;
 
-#[derive(Debug, Default)]
 pub struct App {
     pub menu: AppMenuState,
     pub exit: ExitState,
+    pub file_server: FileServer,
+    pub infected_database: InfectedDatabase,
 }
 
 #[derive(Debug, Default)]
@@ -43,27 +44,65 @@ pub enum InfectedMenuState {
 }
 
 pub struct InfectedList {
-    items: Vec<InfectedItem>,
-    state: ListState
+    pub items: Vec<InfectedItem>,
+    pub state: ListState
 }
 
 pub struct InfectedItem {
-    infected: Infected,
-    connetion_status: InfectedConnectionStatus,
+    pub infected: Infected,
+    pub connetion_status: InfectedConnectionStatus,
+}
 
+impl InfectedList {
+    pub fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            state: ListState::default(),
+        }
+    }
+
+    pub fn from_database(db: &InfectedDatabase) -> Self {
+        let mut infected_list = Vec::new();
+        db.get_all_infected().unwrap().iter().for_each(|i| {
+            infected_list.push(InfectedItem { infected: i.clone(), connetion_status: InfectedConnectionStatus::Disconnected });
+        });
+
+        InfectedList { items: infected_list, state: ListState::default() }
+    }
+
+    pub fn with_items(items: Vec<InfectedItem>) -> Self {
+        let mut state = ListState::default();
+        if !items.is_empty() {
+            state.select(Some(0));
+        }
+        Self { items, state }
+    }
 }
 
 impl App {
-    pub fn init() -> Self {
-        Self { menu: AppMenuState::default(), exit: ExitState::default() }
+    pub fn default() -> Self {
+        // create and init a new fileserver
+        let source = std::env::current_dir().unwrap();
+        let file_server = FileServer::new(&source);
+
+        let infected_database =  InfectedDatabase::new().expect("Could not create database");
+
+        Self { 
+            menu: AppMenuState::default(), 
+            exit: ExitState::default(), 
+            file_server, 
+            infected_database
+    }
     }
 
     /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        //self.file_server.serve().expect("Could not initialize the fileserver");
         while self.is_running() {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
         }
+        //self.file_server.close();
         Ok(())
     }
 
@@ -143,13 +182,7 @@ impl App {
         self.default_menu_instruction(" Users ", area, buffer);
 
     }
-
-    pub fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        self.default_menu_instruction(" Stats ", area, buffer);
-    }
 }
-
-
 
 impl Widget for &App {
     fn render(self, area: ratatui::prelude::Rect, buffer: &mut Buffer)

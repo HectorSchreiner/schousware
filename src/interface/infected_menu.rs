@@ -28,7 +28,7 @@ impl App {
         .border_set(border::ROUNDED)
         .render(area, buffer);
 
-        let db = InfectedDatabase::new().unwrap();
+        let db = &self.infected_database;
 
         let inner_area = Rect {
             x: area.x + 1,

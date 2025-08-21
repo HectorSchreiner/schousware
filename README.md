@@ -18,6 +18,8 @@ cargo run
 
 # Screenshots
 <img title="Infected Menu" src="/screenshots/infected_menu.png">
+<img title="Stats Menu" src="/screenshots/stats_menu.png">
+
 
 # Tools
 
