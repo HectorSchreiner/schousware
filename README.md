@@ -4,7 +4,7 @@
 - [x] Init
 - [x] Simple TUI
 - [x] Local Text Config
-- [ ] Simple fileserver
+- [x] Simple fileserver
 - [ ] Create Simple payload
 - [ ] Recieve Status from machines
 - [ ] Send commands
