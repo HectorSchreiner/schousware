@@ -1,4 +1,4 @@
-use std::{net::{AddrParseError, Ipv4Addr}, ops::Add, str::FromStr};
+use std::{default, net::{AddrParseError, Ipv4Addr}, ops::Add, str::FromStr};
 use serde::{de::value::Error, Deserialize, Serialize};
 use uuid::serde::braced::serialize;
 use ::uuid::Uuid;
@@ -10,12 +10,12 @@ use crate::repos::database::{InfectedDatabaseError, InfectedRepo};
 pub struct Infected {
     pub id: InfectedId,
     pub hostname: HostName,
-    pub ip: InfectedIpAddr
+    pub ip: InfectedIpAddr,
 }
 
 impl Infected {
-    pub fn new(hostname: HostName, ip: InfectedIpAddr) -> Self {
-        Self { id: InfectedId::new(), hostname, ip }
+    pub fn new(hostname: &str, ip: &str) -> Self {
+        Self { id: InfectedId::new(), hostname: HostName::new(hostname), ip: InfectedIpAddr::from_str(ip).expect("Could not parse IP") }
     }
 
     pub fn hostname(&self) -> String {
@@ -92,4 +92,12 @@ impl Serialize for InfectedIpAddr {
         let str = &self.0.to_string();
         serializer.serialize_str(str)
     }
+}
+
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
+pub enum InfectedConnectionStatus {
+    Connected,
+    #[default]
+    Disconnected,
+    Awaiting,
 }

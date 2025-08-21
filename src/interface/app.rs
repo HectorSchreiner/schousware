@@ -7,16 +7,17 @@ use ratatui::{
     style::Stylize,
     symbols::border,
     text::{Line, Text},
-    widgets::{Block, Paragraph, Widget, Wrap},
+    widgets::{Block, ListState, Paragraph, Widget, Wrap},
     DefaultTerminal, Frame,
 };
 
-use crate::{domains::{self, infected::{self, HostName, Infected, InfectedId, InfectedIpAddr}}, repos::database::{self, InfectedDatabase, InfectedRepo}};
+use crate::domains::infected::*;
+use crate::repos::database::*;
 
 #[derive(Debug, Default)]
 pub struct App {
-    menu: AppMenuState,
-    exit: ExitState,
+    pub menu: AppMenuState,
+    pub exit: ExitState,
 }
 
 #[derive(Debug, Default)]
@@ -41,6 +42,17 @@ pub enum InfectedMenuState {
     AddMachine,
 }
 
+pub struct InfectedList {
+    items: Vec<InfectedItem>,
+    state: ListState
+}
+
+pub struct InfectedItem {
+    infected: Infected,
+    connetion_status: InfectedConnectionStatus,
+
+}
+
 impl App {
     pub fn init() -> Self {
         Self { menu: AppMenuState::default(), exit: ExitState::default() }
@@ -55,11 +67,11 @@ impl App {
         Ok(())
     }
 
-    fn draw(&self, frame: &mut Frame) {
+    pub fn draw(&self, frame: &mut Frame) {
         frame.render_widget(self, frame.area());
     }
 
-    fn handle_events(&mut self) -> io::Result<()> {
+    pub fn handle_events(&mut self) -> io::Result<()> {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 self.handle_key_event(key_event);
@@ -69,7 +81,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
+    pub fn handle_key_event(&mut self, key_event: KeyEvent) {
         match self.menu {
             AppMenuState::InfectedMenu(_) => self.handle_infected_key_event(key_event),
             _ => {}
@@ -84,25 +96,26 @@ impl App {
         }
     }
 
-    fn handle_infected_key_event(&mut self, key_event: KeyEvent) {
+    pub fn handle_infected_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('a')  => self.menu = AppMenuState::InfectedMenu(InfectedMenuState::AddMachine),
             KeyCode::Char('s')  => self.menu = AppMenuState::InfectedMenu(InfectedMenuState::ShowInfected),
             _ => {}
         }
     }
-    fn is_running(&self) -> bool {
+    
+    pub fn is_running(&self) -> bool {
         match self.exit {
             ExitState::Exit => false,
             ExitState::Running => true,
         }
     }
 
-    fn menu_selection(&self) -> Line<'static> {
+    pub fn menu_selection(&self) -> Line<'static> {
         Line::from(" <1>Main <2>Users <3>Infected <4>Stats")
     } 
 
-    fn menu_instructions(&self) -> Line<'static> {
+    pub fn menu_instructions(&self) -> Line<'static> {
         Line::from(vec![
             " Exit ".into(),
             "<ESC>".into(),
@@ -111,7 +124,7 @@ impl App {
             ])
     }
 
-    fn default_menu_instruction(&self, title: &'static str, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+    pub fn default_menu_instruction(&self, title: &'static str, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         let title = Line::from(title);
 
         return Block::bordered()
@@ -122,78 +135,16 @@ impl App {
         .render(area, buffer)
     }
 
-    fn render_main_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+    pub fn render_main_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         self.default_menu_instruction(" Main ", area, buffer)        
     }
 
-    fn render_user_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+    pub fn render_user_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         self.default_menu_instruction(" Users ", area, buffer);
 
     }
 
-    fn render_infected_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        let title = Line::from(" Infected ");
-        let infected_commands = Line::from(vec![
-            " S ".into(),
-            "<Show> ".into(),
-            " A ".into(),
-            "<Add> ".into(),
-            ]);
-
-        Block::bordered()
-        .title(title.centered())
-        .title_top(self.menu_instructions().left_aligned())
-        .title_bottom(self.menu_selection().left_aligned())
-        .title_bottom(infected_commands.right_aligned())
-        .border_set(border::ROUNDED)
-        .render(area, buffer);
-
-        let db = InfectedDatabase::new().unwrap();
-
-        let inner_area = Rect {
-            x: area.x + 1,
-            y: area.y + 1,
-            width: area.width - 2,
-            height: area.height - 2,
-        };
-
-        match self.menu {
-            AppMenuState::InfectedMenu(InfectedMenuState::AddMachine) => {
-                let mut info = Text::default();
-                let infected = Infected { id: InfectedId::new(), hostname: HostName::new("hostname"), ip: InfectedIpAddr::from_str("127.0.0.1").unwrap() };
-                match db.add_infected(&infected) {
-                    Ok(_) => {
-                        info.push_line(format!("Sucessfully added {:?} to database", &infected));
-                    },
-                    Err(err) => {
-                        info.push_line(format!("Could not add {:?} to database. Error {:?}", &infected, err));
-                    }
-                }
-
-                let paragraph = Paragraph::new(info).wrap(Wrap { trim: true });
-                paragraph.render(inner_area, buffer);
-            },
-            AppMenuState::InfectedMenu(InfectedMenuState::ShowInfected) => {
-                let mut machine_list_text = Text::default();
-            
-                if let Ok(infected_machines) = db.get_all_infected() {
-                    for (i, infected) in infected_machines.iter().enumerate() {
-                        machine_list_text.push_line(format!("[{:?}] Hostname: {} Ip: {} Uuid: {}", i, infected.hostname(), infected.ip(), infected.id()));
-                    }
-                } else {
-                    machine_list_text.push_line("No Machines Found");
-                }
-            
-                let paragraph = Paragraph::new(machine_list_text).wrap(Wrap { trim: true });
-                paragraph.render(inner_area, buffer);
-            },
-            _ => {}
-        }
-
-
-    }
-
-    fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
+    pub fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
         self.default_menu_instruction(" Stats ", area, buffer);
     }
 }

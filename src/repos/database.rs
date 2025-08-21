@@ -1,6 +1,7 @@
 use std::{fs, io::{BufReader, Read}, path::PathBuf};
 
 use dirs::config_dir;
+use ratatui::widgets::{Block, ListState};
 use thiserror::Error;
 use uuid::Uuid;
 
