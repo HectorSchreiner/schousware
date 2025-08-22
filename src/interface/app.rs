@@ -92,7 +92,7 @@ impl App {
             exit: ExitState::default(), 
             file_server, 
             infected_database
-    }
+        }
     }
 
     /// runs the application's main loop until the user quits
@@ -104,6 +104,13 @@ impl App {
         }
         //self.file_server.close();
         Ok(())
+    }
+
+    pub fn start_file_server(&mut self) {
+        match self.file_server.serve() {
+            Ok(_) => {},
+            Err(_) => {}
+        };
     }
 
     pub fn draw(&self, frame: &mut Frame) {
@@ -172,15 +179,6 @@ impl App {
         .title_bottom(self.menu_selection().left_aligned())
         .border_set(border::ROUNDED)
         .render(area, buffer)
-    }
-
-    pub fn render_main_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        self.default_menu_instruction(" Main ", area, buffer)        
-    }
-
-    pub fn render_user_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {
-        self.default_menu_instruction(" Users ", area, buffer);
-
     }
 }
 
