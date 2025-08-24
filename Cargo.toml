@@ -7,9 +7,8 @@ edition = "2024"
 crossterm = "0.29.0"
 ratatui = "0.29.0"
 thiserror = "2.0.14"
-tokio = "1.47.1"
+tokio = { version = "1.47.1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "6.0.0"
 serde_json = "1.0.142"
-file-serve = "0.3.8"

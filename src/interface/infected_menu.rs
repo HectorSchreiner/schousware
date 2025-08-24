@@ -28,21 +28,21 @@ impl App {
         .border_set(border::ROUNDED)
         .render(area, buffer);
 
-        let db = &self.infected_database;
-
         let inner_area = Rect {
             x: area.x + 1,
             y: area.y + 1,
             width: area.width - 2,
             height: area.height - 2,
         };
+        
+        let infected_list = InfectedList::from_database(&self.infected_database);
 
         match self.menu {
             AppMenuState::InfectedMenu(InfectedMenuState::AddMachine) => {
                 let mut info = Text::default();
                 let infected = Infected::new("Windows PC", "127.0.0.1");
 
-                match db.add_infected(&infected) {
+                match self.infected_database.add_infected(&infected) {
                     Ok(_) => {
                         info.push_line(format!("Sucessfully added {:?} to database", &infected));
                     },
@@ -57,7 +57,7 @@ impl App {
             AppMenuState::InfectedMenu(InfectedMenuState::ShowInfected) => {
                 let mut machine_list_text = Text::default();
             
-                if let Ok(infected_machines) = db.get_all_infected() {
+                if let Ok(infected_machines) = self.infected_database.get_all_infected() {
                     for (i, infected) in infected_machines.iter().enumerate() {
                         machine_list_text.push_line(format!("[{:?}] Hostname: {} Ip: {} Uuid: {}", i, infected.hostname(), infected.ip(), infected.id()));
                     }

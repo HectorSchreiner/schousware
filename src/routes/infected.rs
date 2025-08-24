@@ -19,6 +19,6 @@ pub fn get_infected(id: InfectedId) -> Infected {
 #[error("Command could not execute")]
 pub struct CommandExecutionError;
 
-pub fn send_command(command: crate::domains::command::Command, target: Infected) -> Result<(), CommandExecutionError> {
+pub fn send_command(command: crate::domains::command::C2Command, target: Infected) -> Result<(), CommandExecutionError> {
     todo!()
 }

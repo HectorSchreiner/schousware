@@ -11,7 +11,7 @@ use ratatui::{
 };
 
 use crate::{domains::infected::{Infected, InfectedConnectionStatus}, interface::app::*, repos::database::{InfectedDatabase, InfectedRepo}};
-use crate::domains::file_server::*;
+use crate::domains::c4server::*;
 
 impl App {
     pub fn render_stats_menu(&self, area: ratatui::prelude::Rect, buffer: &mut Buffer) {

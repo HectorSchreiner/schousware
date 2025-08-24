@@ -11,13 +11,13 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use crate::domains::{file_server::FileServer, infected::*};
+use crate::domains::{c4server::*, infected::*};
 use crate::repos::database::*;
 
 pub struct App {
     pub menu: AppMenuState,
     pub exit: ExitState,
-    pub file_server: FileServer,
+    pub c2server: C4Server,
     pub infected_database: InfectedDatabase,
 }
 
@@ -83,14 +83,13 @@ impl App {
     pub fn default() -> Self {
         // create and init a new fileserver
         let source = std::env::current_dir().unwrap();
-        let file_server = FileServer::new(&source);
 
         let infected_database =  InfectedDatabase::new().expect("Could not create database");
 
         Self { 
             menu: AppMenuState::default(), 
             exit: ExitState::default(), 
-            file_server, 
+            c2server: todo!(), 
             infected_database
         }
     }
@@ -104,13 +103,6 @@ impl App {
         }
         //self.file_server.close();
         Ok(())
-    }
-
-    pub fn start_file_server(&mut self) {
-        match self.file_server.serve() {
-            Ok(_) => {},
-            Err(_) => {}
-        };
     }
 
     pub fn draw(&self, frame: &mut Frame) {

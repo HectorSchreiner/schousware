@@ -1,13 +1,13 @@
+use std::process::Command;
+
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-pub struct Command {
-    command_string: CommandString,
-}
+pub struct C2Command(std::process::Command);
 
-impl Command {
+impl C2Command {
     fn new(&self, command_string: CommandString) -> Self {
-        Self { command_string }
+        Self(Command::new(command_string.0))
     } 
 }
 
