@@ -7,7 +7,7 @@
 - [x] Simple fileserver
 - [ ] Create Simple payload
 - [ ] Recieve Status from machines
-- [ ] Send commands
+- [x] Send commands (ikke testet, men tror det virker)
 - [ ] Replace Text Config with local sql server
 
 # Installation
