@@ -3,23 +3,14 @@ use std::process::Command;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-pub struct C2Command(std::process::Command);
+pub struct C4Command(String);
 
-impl C2Command {
-    fn new(&self, command_string: CommandString) -> Self {
-        Self(Command::new(command_string.0))
+impl C4Command {
+    fn new(&self, command: String) -> Self {
+        Self(command)
     } 
-}
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CommandString(String);
-
-#[derive(Error, Debug, Clone, Copy)]
-#[error("Not a valid command")]
-pub struct CommandCreationError;
-
-impl CommandString {
-    pub fn new(&self, command: String) -> Result<Self, CommandCreationError> {
-        Ok(Self(command))
+    pub fn get_as_str(&self) -> &str {
+        &self.0
     }
 }

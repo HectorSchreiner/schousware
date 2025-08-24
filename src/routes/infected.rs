@@ -14,11 +14,3 @@ pub fn create_infected(infected: &Infected, database: impl InfectedRepo) -> Resu
 pub fn get_infected(id: InfectedId) -> Infected {
     todo!()
 }
-
-#[derive(Error, Debug, Deserialize, Serialize, Clone, Copy)]
-#[error("Command could not execute")]
-pub struct CommandExecutionError;
-
-pub fn send_command(command: crate::domains::command::C2Command, target: Infected) -> Result<(), CommandExecutionError> {
-    todo!()
-}

@@ -8,26 +8,31 @@ use crate::repos::database::{InfectedDatabaseError, InfectedRepo};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Infected {
-    pub id: InfectedId,
-    pub hostname: HostName,
-    pub ip: InfectedIpAddr,
+    id: InfectedId,
+    hostname: HostName,
+    ip: InfectedIpAddr,
+    port: u16
 }
 
 impl Infected {
     pub fn new(hostname: &str, ip: &str) -> Self {
-        Self { id: InfectedId::new(), hostname: HostName::new(hostname), ip: InfectedIpAddr::from_str(ip).expect("Could not parse IP") }
+        Self { id: InfectedId::new(), hostname: HostName::new(hostname), ip: InfectedIpAddr::from_str(ip).expect("Could not parse IP"), port: 8000 }
     }
 
     pub fn hostname(&self) -> String {
         self.hostname.0.clone()
     }
 
-    pub fn id(&self) -> String {
-        self.id.0.to_string()
+    pub fn id(&self) -> Uuid {
+        self.id.0
     }
 
     pub fn ip(&self) -> String {
         self.ip.0.to_string()
+    }
+
+    pub fn port(&self) -> String {
+        self.port.to_string()
     }
 }
 

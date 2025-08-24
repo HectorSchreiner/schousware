@@ -91,7 +91,7 @@ impl InfectedRepo for InfectedDatabase {
         let infected_vec = self.get_all_infected()?;
 
         infected_vec.into_iter()
-            .find(|i| i.id.get() == uuid)
+            .find(|i| i.id() == uuid)
             .ok_or(InfectedDatabaseError::InfectedNotFound)
     }
 
@@ -102,7 +102,7 @@ impl InfectedRepo for InfectedDatabase {
         match infected_vec {
             Ok(infected_vec) => {
                 for item in infected_vec.iter() {
-                    if item.id.get() != uuid {
+                    if item.id() != uuid {
                         new_infected_vec.push(item.clone());
                     }
                 }
