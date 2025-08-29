@@ -11,7 +11,7 @@
 - [ ] Replace Text Config with local sql server
 
 # Installation
-You can clone the project and run the `Debug Build` it with 
+You can clone the project and run the `Debug build` it with 
 ```
 cargo run
 ```
