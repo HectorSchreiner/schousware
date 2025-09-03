@@ -1,4 +1,4 @@
-use std::{net::IpAddr, path::PathBuf};
+use std::{net::{IpAddr, Ipv4Addr}, path::PathBuf};
 use thiserror::Error;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -41,6 +41,14 @@ impl C4Server {
             ip, 
             status: C4ServerConnectionStatus::Closed,
             port,
+        }
+    }
+
+    pub fn default() -> Self {
+        Self { 
+            ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            status: C4ServerConnectionStatus::Closed,
+            port: 8080,
         }
     }
 

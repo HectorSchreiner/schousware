@@ -11,7 +11,7 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use crate::domains::{c4server::*, infected::*};
+use crate::domains::{c4server::{self, *}, infected::*};
 use crate::repos::database::*;
 
 pub struct App {
@@ -82,14 +82,14 @@ impl InfectedList {
 impl App {
     pub fn default() -> Self {
         // create and init a new fileserver
-        let source = std::env::current_dir().unwrap();
+        //let source = std::env::current_dir().unwrap();
 
         let infected_database =  InfectedDatabase::new().expect("Could not create database");
 
         Self { 
             menu: AppMenuState::default(), 
             exit: ExitState::default(), 
-            c2server: todo!(), 
+            c2server: C4Server::default(), 
             infected_database
         }
     }

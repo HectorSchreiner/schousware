@@ -16,7 +16,7 @@ pub struct Infected {
 
 impl Infected {
     pub fn new(hostname: &str, ip: &str) -> Self {
-        Self { id: InfectedId::new(), hostname: HostName::new(hostname), ip: InfectedIpAddr::from_str(ip).expect("Could not parse IP"), port: 8000 }
+        Self { id: InfectedId::new(), hostname: HostName::new(hostname), ip: InfectedIpAddr::from_str(ip).expect("Could not parse IP"), port: 8080 }
     }
 
     pub fn hostname(&self) -> String {
